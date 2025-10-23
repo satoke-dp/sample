@@ -44,7 +44,7 @@ sequenceDiagram
     participant HR as 人事担当者
     participant IssuerFE as 社員証Issuerフロント
     participant IssuerBE as 社員証Issuerバックエンド
-    participant NewHire as 新入社員(Holder)
+    participant Hire as 社員(Holder)
     participant MySov as MySov (Wallet)
     participant VDR as DIDレジストリ/Blockchain
 
@@ -52,16 +52,16 @@ sequenceDiagram
     HR->IssuerFE: 1. 社員情報入力 (氏名, 役職など)
     IssuerFE->IssuerBE: 2. [POST /employees] 社員情報の登録リクエスト
     Note over IssuerBE: 3. DBで社員情報を登録
-    IssuerBE->NewHire: 4. 本人確認リンク付きメール送信 📧
+    IssuerBE->Hire: 4. 本人確認リンク付きメール送信 📧
 
     %% 5. VC検証要求 (Challenge Generation)
-    NewHire->IssuerFE: 5. メールリンクを踏んで遷移 (本人確認開始)
-    IssuerFE->IssuerBE: 6. [POST /auth/vc/challenge] ノンス要求
+    Hire->IssuerFE: 5. メールリンクを踏んで遷移 (本人確認開始)
+    IssuerFE->IssuerBE: 6. [POST  /challenges/myNumber-vc] ノンス要求
     Note over IssuerBE: 7. 一意のChallenge(Nonce)を生成し、DBに一時保存
     IssuerBE-->IssuerFE: 8. 200 OK (Nonce, VP要求URLを返却)
     
-    IssuerFE->NewHire: 9. 『MySovで本人確認』ボタン表示/クリック促す
-    NewHire->MySov: 10. クリックまたはQRコードスキャンで遷移 (Challengeを含む要求)
+    IssuerFE->Hire: 9. 『MySovで本人確認』ボタン表示/クリック促す
+    IssuerFE->MySov: 10. クリックまたはQRコードスキャンで遷移 (Challengeを含む要求)
 
     %% 6. 署名と提示 (VP Presentation)
     MySov->MySov: 11. マイナンバーVCを選択し、Nonceを含めてVPに署名 (Holder秘密鍵)
@@ -78,9 +78,10 @@ sequenceDiagram
 
     alt 検証成功 (VC有効 & 本人確認完了)
         IssuerBE->IssuerFE: 15. 200 OK (本人確認完了を通知)
+        IssuerFE->Hire: 16. 本人確認が完了したことを画面表示
     else 検証失敗
         IssuerBE-->IssuerFE: 15. 401 Unauthorized / 403 Forbidden
-        IssuerFE->NewHire: 16. エラー画面表示
+    IssuerFE->Hire: 16. エラー画面表示
     end
 ```
 
