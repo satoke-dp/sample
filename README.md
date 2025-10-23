@@ -17,7 +17,7 @@ sequenceDiagram
     IssuerFE->>MySov: 5. リンクボタン、またはQRコードからMySovに遷移。VP提示要求 (Nonceと要求クレームを含む)
 
     %% 署名と提示 (VP Presentation)
-    MySov->>MySov: 6. 社員証VCを選択し、Nonceを含めてVPに署名 (Holder秘密鍵)
+    HR->>MySov: 6. 社員証VCを選択し、Nonceを含めてVPに署名 (Holder秘密鍵)
     Note right of MySov: VPをvp_tokenに格納
     MySov->>IssuerFE: 7. ブラウザでRedirect URIにリダイレクト (vp_tokenを搭載)
     IssuerFE->>IssuerBE: 8. [POST /login/vc] vp_tokenをBackendへ転送
