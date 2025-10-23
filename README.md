@@ -20,7 +20,7 @@ sequenceDiagram
     MySov->MySov: 6. 社員証VCを選択し、Nonceを含めてVPに署名 (Holder秘密鍵)
     Note right of MySov: VPをvp_tokenに格納
     MySov->IssuerFE: 7. ブラウザでRedirect URIにリダイレクト (vp_tokenを搭載)
-    IssuerFE->IssuerBE: 8. [POST /auth/vc/exchange] vp_tokenをBackendへ転送
+    IssuerFE->IssuerBE: 8. [POST /login/vc] vp_tokenをBackendへ転送
 
     %% 検証とセッション確立 (Verification & Session Grant)
     Note over IssuerBE: 9. VC/VP検証開始
