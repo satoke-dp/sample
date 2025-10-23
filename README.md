@@ -114,7 +114,7 @@ sequenceDiagram
     Wallet-->VerifierFE: 10. SignatureとSigner's DID (HRのDID)を返却
 
     %% 3. Submission to Backend
-    VerifierFE->VerifierBE: 11. [POST /data/approve] Signed Approval, HR DIDを送信
+    VerifierFE->VerifierBE: 11. [POST /signatures/validate] originalData, signature, employeeId(人事担当者のid), algorithm
 
     %% 4. Verification and Storage (Server-side)
     Note over VerifierBE: 12. 検証開始 (真正性チェック)
