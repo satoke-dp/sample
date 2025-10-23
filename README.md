@@ -1,3 +1,5 @@
+# 主要フロー
+
 ## 人事担当者のVCによるログインとJWT作成フローについて
 
 ```mermaid
@@ -133,3 +135,19 @@ sequenceDiagram
     end
     VerifierFE->>HR: 19. 結果表示
 ```
+
+#　データベース構造
+
+## Employee
+| カラム名 | データ型 | 制約/説明 | 備考 |
+| :--- | :--- | :--- | :--- |
+| **`id`** | `UUID` | **主キー (PK)** | 社員情報レコードの一意識別子。VC IDではない。 |
+| **`tenant_id`** | `UUID` | **外部キー (FK)** | 所属企業（テナント）のID。 |
+| `first_name` | **`string`** | NOT NULL | 名（下の名前）。 |
+| `family_name` | **`string`** | NOT NULL | 姓（名字）。 |
+| `email` | **`string`** | NOT NULL, UNIQUE | 登録用メールアドレス。本人確認VCを送るアカウント。 |
+| `department_id` | `UUID` | FK | 所属部署への外部キー。 |
+| `job_title` | **`string`** | NOT NULL | 役職名。 |
+| `did` | **`string`** | UNIQUE, NULLABLE | 社員が保有するDID。本人確認完了後に登録される。 |
+| `is_verified_with_my_number` | `BOOLEAN` | DEFAULT `FALSE` | マイナンバーVCによる本人確認が完了したかを示すフラグ。 |
+| `created_at` | `TIMESTAMP` | NOT NULL | レコード作成日時。 |
