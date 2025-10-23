@@ -42,45 +42,45 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant HR as 人事担当者
-    participant NewHire as 新入社員(Holder)
     participant IssuerFE as 社員証Issuerフロント
     participant IssuerBE as 社員証Issuerバックエンド
+    participant NewHire as 新入社員(Holder)
     participant MySov as MySov (Wallet)
     participant VDR as DIDレジストリ/Blockchain
 
-    %% 1. 発行開始 (HRからのトリガー)
-    HR->IssuerFE: 1. 社員情報入力完了
-    IssuerFE->HR: 2. 確認メール送信指示
-    HR->NewHire: 3. メール送信 (本人確認リンク付き)
-    NewHire->IssuerFE: 4. メールリンクを踏んで遷移 (本人確認開始)
+    %% 1. 情報入力と更新 (発行のトリガー)
+    HR->IssuerFE: 1. 社員情報入力 (氏名, 役職など)
+    IssuerFE->IssuerBE: 2. [POST /employees] 社員情報の更新/登録リクエスト
+    Note over IssuerBE: 3. DBで社員情報を登録/更新
+    IssuerBE->NewHire: 4. 本人確認リンク付きメール送信 📧
 
-    %% 2. VC検証要求 (Challenge Generation)
-    IssuerFE->IssuerBE: 5. [GET /auth/vc/challenge] ノンス要求
-    Note over IssuerBE: 6. 一意のChallenge(Nonce)を生成し、DBに一時保存
-    IssuerBE-->IssuerFE: 7. 200 OK (Nonce, VC要求URLを返却)
+    %% 5. VC検証要求 (Challenge Generation)
+    NewHire->IssuerFE: 5. メールリンクを踏んで遷移 (本人確認開始)
+    IssuerFE->IssuerBE: 6. [POST /auth/vc/challenge] ノンス要求
+    Note over IssuerBE: 7. 一意のChallenge(Nonce)を生成し、DBに一時保存
+    IssuerBE-->IssuerFE: 8. 200 OK (Nonce, VP要求URLを返却)
     
-    IssuerFE->NewHire: 8. 『MySovで本人確認』ボタン表示/クリック促す
-    NewHire->MySov: 9. クリックまたはQRコードスキャンで遷移 (Challengeを含む要求)
+    IssuerFE->NewHire: 9. 『MySovで本人確認』ボタン表示/クリック促す
+    NewHire->MySov: 10. クリックまたはQRコードスキャンで遷移 (Challengeを含む要求)
 
-    %% 3. 署名と提示 (VP Presentation)
-    MySov->MySov: 10. マイナンバーVCを選択し、Nonceを含めてVPに署名 (Holder秘密鍵)
-    Note right of MySov: VPをvp_tokenに格納 (Format: OpenID4VP)
-    MySov->IssuerFE: 11. ブラウザでRedirect URIにリダイレクト (vp_tokenを搭載)
+    %% 6. 署名と提示 (VP Presentation)
+    MySov->MySov: 11. マイナンバーVCを選択し、Nonceを含めてVPに署名 (Holder秘密鍵)
+    Note right of MySov: VPをvp_tokenに格納
+    MySov->IssuerFE: 12. ブラウザでRedirect URIにリダイレクト (vp_tokenを搭載)
 
-    %% 4. 検証と認証 (Verification)
-    IssuerFE->IssuerBE: 12. [POST /auth/vc/exchange] vp_tokenをBackendへ転送
+    %% 7. 検証と認証 (Verification)
+    IssuerFE->IssuerBE: 13. [POST /auth/vc/exchange] vp_tokenをBackendへ転送
     
-    Note over IssuerBE: 13. 検証開始
-    IssuerBE->VDR: 13a. Issuer公開鍵取得 (マイナンバーVCの発行者)
-    VDR-->IssuerBE: 13b. 公開鍵返却
-    Note over IssuerBE: 13c. 署名/Nonce/VC内容(マイナンバー)の検証
+    Note over IssuerBE: 14. 検証開始
+    IssuerBE->VDR: 14a. Issuer公開鍵取得 (マイナンバーVCの発行者)
+    VDR-->IssuerBE: 14b. 公開鍵返却
+    Note over IssuerBE: 14c. 署名/Nonce/VC内容の検証 (社員IDとVCの紐付け)
 
     alt 検証成功 (VC有効 & 本人確認完了)
-        IssuerBE->IssuerBE: 14. 認証セッションを確立 (社員情報とDIDを紐付け)
-        IssuerBE-->IssuerFE: 15. 200 OK (認証セッションIDを返却)
+        IssuerBE->IssuerFE: 15. 200 OK (本人確認完了を通知)
         IssuerFE->NewHire: 16. 本人確認完了画面に遷移 (社員証VC発行へ)
-    else 検証失敗 (Nonce不一致, VC失効など)
-        IssuerBE-->IssuerFE: 15. 401 Unauthorized
+    else 検証失敗
+        IssuerBE-->IssuerFE: 15. 401 Unauthorized / 403 Forbidden
         IssuerFE->NewHire: 16. エラー画面表示
     end
 ```
