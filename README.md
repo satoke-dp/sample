@@ -50,8 +50,8 @@ sequenceDiagram
 
     %% 1. 情報入力と更新 (発行のトリガー)
     HR->IssuerFE: 1. 社員情報入力 (氏名, 役職など)
-    IssuerFE->IssuerBE: 2. [POST /employees] 社員情報の更新/登録リクエスト
-    Note over IssuerBE: 3. DBで社員情報を登録/更新
+    IssuerFE->IssuerBE: 2. [POST /employees] 社員情報の登録リクエスト
+    Note over IssuerBE: 3. DBで社員情報を登録
     IssuerBE->NewHire: 4. 本人確認リンク付きメール送信 📧
 
     %% 5. VC検証要求 (Challenge Generation)
@@ -78,7 +78,6 @@ sequenceDiagram
 
     alt 検証成功 (VC有効 & 本人確認完了)
         IssuerBE->IssuerFE: 15. 200 OK (本人確認完了を通知)
-        IssuerFE->NewHire: 16. 本人確認完了画面に遷移 (社員証VC発行へ)
     else 検証失敗
         IssuerBE-->IssuerFE: 15. 401 Unauthorized / 403 Forbidden
         IssuerFE->NewHire: 16. エラー画面表示
