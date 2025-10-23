@@ -111,7 +111,7 @@ sequenceDiagram
     Wallet->HR: 7. 署名内容の確認提示 (例: "ACME-90210の本人確認を承認します")
     HR->Wallet: 8. 署名を承認 (生体認証など)
     Wallet->Wallet: 9. DID Private Keyでハッシュに署名 (Signature生成)
-    Wallet-->VerifierFE: 10. SignatureとSigner's DID (HRのDID)を返却
+    Wallet-->VerifierFE: 10. Signatureを返却
 
     %% 3. Submission to Backend
     VerifierFE->VerifierBE: 11. [POST /signatures/validate] originalData, signature, employeeId(人事担当者のid), algorithm
@@ -122,7 +122,7 @@ sequenceDiagram
     VerifierBE->VDR: 13. Signer's DIDを解決し、Public Keyを取得
     VDR-->VerifierBE: 14. Public Keyを返却 (DID Documentより)
     
-    VerifierBE->VerifierBE: 15. 受信データ(Signed Data)を再HASH化
+    VerifierBE->VerifierBE: 15. 受信データ(originalData)を再HASH化
     Note over VerifierBE: 16. Public KeyでSignatureを検証 (一致確認)
 
     alt 署名検証成功
