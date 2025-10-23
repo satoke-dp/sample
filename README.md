@@ -85,3 +85,49 @@ sequenceDiagram
     end
 ```
 
+## 人事担当による署名フロー
+```mermaid
+sequenceDiagram
+    participant HR as HR (Signer)
+    participant VerifierFE as Verifier FE (Browser)
+    participant VerifierBE as Verifier BE (API)
+    participant Wallet as Holder Wallet
+    participant VDR as VDR (DID Registry)
+
+    %% 1. HRによる社員情報取得と確認 (Verification)
+    HR->VerifierFE: 1. 社員選択/ID入力 (例: Employee ID: ACME-90210)
+    
+    VerifierFE->VerifierBE: 2. [GET /employees/{employeeId}] 社員情報取得リクエスト
+    Note over VerifierBE: 2a. DBで社員情報とVC検証ステータスを確認
+    VerifierBE-->VerifierFE: 3. 200 OK (社員情報を返却)
+    
+    HR->VerifierFE: 4. 承認すべきデータを選択/確認 (画面表示された情報に基づき)
+    
+    %% 2. Data Preparation and Signing (HR Action)
+    VerifierFE->VerifierFE: 5. 承認対象データをJSONオブジェクトに構築
+    VerifierFE->Wallet: 6. 署名要求 (データをWallet SDK経由で送信)
+
+    Note over Wallet: 7. データをCanonical化 & HASH化 (SHA-256)
+    Wallet->Wallet: 8. DID Private Keyでハッシュに署名 (Signature生成)
+    Wallet-->VerifierFE: 9. SignatureとSigner's DID (HRのDID)を返却
+
+    %% 3. Submission to Backend
+    VerifierFE->VerifierBE: 10. [POST /data/approve] Signed Approval, HR DIDを送信
+
+    %% 4. Verification and Storage (Server-side)
+    Note over VerifierBE: 11. 検証開始 (真正性チェック)
+    
+    VerifierBE->VDR: 12. Signer's DIDを解決し、Public Keyを取得
+    VDR-->VerifierBE: 13. Public Keyを返却 (DID Documentより)
+    
+    VerifierBE->VerifierBE: 14. 受信データ(Signed Data)を再HASH化
+    Note over VerifierBE: 15. Public KeyでSignatureを検証 (一致確認)
+
+    alt 署名検証成功
+        VerifierBE->VerifierBE: 16. データをDBに記録/監査ログ作成
+        VerifierBE-->VerifierFE: 17. 200 OK (データ受理完了)
+    else 署名検証失敗
+        VerifierBE-->VerifierFE: 17. 401 Unauthorized (改ざんまたは鍵不一致)
+    end
+    VerifierFE->HR: 18. 結果表示
+```
